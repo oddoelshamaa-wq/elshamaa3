@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سجل الطلبات - الشماع</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="header-top">
+            <div class="logo">
+                <a href="index.html"><img src="https://www.jumia.com.eg/assets_he/images/jumia-logo.png" alt="الشماع"></a>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="البحث عن منتجات...">
+                <button id="search-btn">بحث</button>
+            </div>
+            <div class="user-actions">
+                <a href="buyer.html">العودة للتسوق</a>
+                <a href="#" id="logout-btn">تسجيل خروج</a>
+            </div>
+        </div>
+        <nav>
+          
+        </nav>
+    </header>
+
+    <main>
+        <section class="order-history-section">
+            <h2>سجل الطلبات</h2>
+            <div id="order-history-list">
+                <!-- Order history will be displayed here -->
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 الشماع. جميع الحقوق محفوظة.</p>
+    </footer>
+
+    <script src="order-history.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "name": "أحمد محمد",
+    "email": "ahmed@example.com",
+    "password": "123456",
+    "address": "شارع النيل، القاهرة",
+    "phone": "01234567890",
+    "accountType": "buyer"
+  },
+  {
+    "id": 2,
+    "name": "فاطمة علي",
+    "email": "fatima@example.com",
+    "password": "123456",
+    "address": "شارع الهرم، الجيزة",
+    "phone": "01111111111",
+    "accountType": "seller"
+  }
+]

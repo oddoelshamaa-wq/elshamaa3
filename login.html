@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - الشماع</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="header-top">
+            <div class="logo">
+                <a href="index.html"><img src="11zon_cropped.jpg" alt="الشماع"></a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="auth-section">
+            <div class="auth-container">
+                <h1>تسجيل الدخول</h1>
+                <div class="social-login">
+                    <button class="social-btn google-btn">
+                        <img src="https://img.icons8.com/color/24/000000/google-logo.png" alt="Google">
+                        تسجيل الدخول باستخدام Google
+                    </button>
+                    <button class="social-btn facebook-btn">
+                        <img src="https://img.icons8.com/color/24/000000/facebook.png" alt="Facebook">
+                        تسجيل الدخول باستخدام Facebook
+                    </button>
+                </div>
+                <div class="divider">أو</div>
+                <form id="login-form-element">
+                    <div class="form-group">
+                        <input type="email" id="login-email" placeholder="البريد الإلكتروني" required>
+                        <div id="login-email-error" class="error-message"></div>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="login-password" placeholder="كلمة المرور" required>
+                        <div id="login-password-error" class="error-message"></div>
+                    </div>
+                    <div class="form-options">
+                        <label>
+                            <input type="checkbox" id="remember-me"> تذكرني
+                        </label>
+                        <a href="#" class="forgot-password">نسيت كلمة المرور؟</a>
+                    </div>
+                    <button type="submit" class="submit-btn">دخول</button>
+                </form>
+                <p class="switch-form">ليس لديك حساب؟ <a href="register.html">إنشاء حساب</a></p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 الشماع. جميع الحقوق محفوظة.</p>
+    </footer>
+
+    <script>
+        // Form validation functions
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        function validatePassword(password) {
+            return password.length >= 6;
+        }
+
+        function showError(elementId, message) {
+            const errorElement = document.getElementById(elementId);
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+
+        function hideError(elementId) {
+            const errorElement = document.getElementById(elementId);
+            errorElement.style.display = 'none';
+        }
+
+        // Real-time validation
+        document.getElementById('login-email').addEventListener('input', (e) => {
+            if (!validateEmail(e.target.value)) {
+                showError('login-email-error', 'يرجى إدخال بريد إلكتروني صحيح');
+            } else {
+                hideError('login-email-error');
+            }
+        });
+
+        document.getElementById('login-password').addEventListener('input', (e) => {
+            if (!validatePassword(e.target.value)) {
+                showError('login-password-error', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+            } else {
+                hideError('login-password-error');
+            }
+        });
+
+        document.getElementById('login-form-element').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            // Authenticate user
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const user = users.find(u => u.email === email && u.password === password);
+            if (!user) {
+                alert('البريد الإلكتروني أو كلمة المرور غير صحيحة!');
+                return;
+            }
+
+            // Set current user
+            localStorage.setItem('currentUser', JSON.stringify(user));
+
+            // Redirect based on account type
+            if (user.accountType === 'buyer') {
+                window.location.href = 'buyer.html';
+            } else if (user.accountType === 'seller') {
+                window.location.href = 'seller.html';
+            }
+        });
+
+        // Social login buttons (placeholders)
+        document.querySelector('.google-btn').addEventListener('click', () => {
+            alert('تسجيل الدخول باستخدام Google (قيد التطوير)');
+        });
+
+        document.querySelector('.facebook-btn').addEventListener('click', () => {
+            alert('تسجيل الدخول باستخدام Facebook (قيد التطوير)');
+        });
+
+        // Forgot password
+        document.querySelector('.forgot-password').addEventListener('click', (e) => {
+            e.preventDefault();
+            alert('إعادة تعيين كلمة المرور (قيد التطوير)');
+        });
+    </script>
+</body>
+</html>
