@@ -117,7 +117,7 @@
             }
         });
 
-        document.getElementById('register-form-element').addEventListener('submit', (e) => {
+        document.getElementById('register-form-element').addEventListener('submit', async (e) => {
             e.preventDefault();
             const name = document.getElementById('register-name').value;
             const email = document.getElementById('register-email').value;
@@ -126,27 +126,41 @@
             const phone = document.getElementById('register-phone').value;
             const accountType = document.getElementById('register-account-type').value;
 
-            // Check if user already exists
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const existingUser = users.find(user => user.email === email);
-            if (existingUser) {
-                alert('البريد الإلكتروني موجود بالفعل!');
-                return;
-            }
+            // Show loading
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'جاري إنشاء الحساب...';
+            submitBtn.disabled = true;
 
-            // Save new user
-            const newUser = { name, email, password, address, phone, accountType };
-            users.push(newUser);
-            localStorage.setItem('users', JSON.stringify(users));
+            try {
+                // Register user with Firebase
+                const result = await authService.registerUser(email, password, {
+                    name,
+                    address,
+                    phone,
+                    accountType
+                });
 
-            // Set current user
-            localStorage.setItem('currentUser', JSON.stringify(newUser));
+                if (result.success) {
+                    // Set current user data
+                    localStorage.setItem('currentUser', JSON.stringify(result.userData));
 
-            // Redirect based on account type
-            if (accountType === 'buyer') {
-                window.location.href = 'buyer.html';
-            } else if (accountType === 'seller') {
-                window.location.href = 'seller.html';
+                    // Redirect based on account type
+                    if (accountType === 'buyer') {
+                        window.location.href = 'buyer.html';
+                    } else if (accountType === 'seller') {
+                        window.location.href = 'seller.html';
+                    }
+                } else {
+                    alert(result.error);
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                alert('حدث خطأ أثناء إنشاء الحساب');
+            } finally {
+                // Reset button
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
             }
         });
     </script>

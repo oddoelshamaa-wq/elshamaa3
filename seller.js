@@ -1,51 +1,66 @@
-// Firebase imports - commented out until proper config is provided
-// import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
-// import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, getDocs, getDoc, query, where, orderBy, onSnapshot } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
-
-// Firebase Configuration - Replace with your actual Firebase project config
-// const firebaseConfig = {
-//     apiKey: "your-actual-api-key",
-//     authDomain: "your-project.firebaseapp.com",
-//     projectId: "your-project-id",
-//     storageBucket: "your-project.appspot.com",
-//     messagingSenderId: "123456789",
-//     appId: "your-app-id"
-// };
-
-// Initialize Firebase - commented out until proper config is provided
-// const app = initializeApp(firebaseConfig);
-// const db = getFirestore(app);
-
-// Collections references - commented out until Firebase is properly configured
-// const productsRef = collection(db, 'products');
-// const ordersRef = collection(db, 'orders');
-// const categoriesRef = collection(db, 'categories');
-// const driversRef = collection(db, 'drivers');
-// const offersRef = collection(db, 'offers');
-// const deliveryPricesRef = collection(db, 'deliveryPrices');
-// const notificationsRef = collection(db, 'notifications');
-
-// Firebase availability flag
-const firebaseAvailable = false;
-
-// Seller products storage (will be loaded from Firebase)
+// Seller products storage - will be loaded from Firebase
 let sellerProducts = [];
 let currentEditingProductId = null;
 
 // Seller notifications
 let sellerNotifications = [];
 
-// Categories management
+// Categories management - will be loaded from Firebase
 let categories = ['الإلكترونيات', 'الملابس', 'المنزل والمطبخ', 'الصحة والجمال'];
 
 // Drivers management
 let drivers = [];
 
-// Orders management
+// Orders management - will be loaded from Firebase
 let orders = [];
 
-// Offers management
+// Offers management - will be loaded from Firebase
 let offers = [];
+
+// Load data from Firebase on page load
+async function loadSellerData() {
+    try {
+        // Load products
+        const productsResult = await dbService.getAllProducts();
+        if (productsResult.success) {
+            sellerProducts = productsResult.products;
+        }
+
+        // Load categories
+        const categoriesResult = await dbService.getCategories();
+        if (categoriesResult.success) {
+            categories = categoriesResult.categories;
+        }
+
+        // Load orders
+        const ordersResult = await dbService.getAllOrders();
+        if (ordersResult.success) {
+            orders = ordersResult.orders;
+        }
+
+        // Load offers
+        const offersResult = await dbService.getOffers();
+        if (offersResult.success) {
+            offers = offersResult.offers;
+        }
+
+        // Load drivers (still from localStorage for now)
+        drivers = JSON.parse(localStorage.getItem('drivers')) || [];
+
+        // Load notifications (still from localStorage for now)
+        sellerNotifications = JSON.parse(localStorage.getItem('sellerNotifications')) || [];
+
+    } catch (error) {
+        console.error('Error loading seller data:', error);
+        // Fallback to localStorage if Firebase fails
+        sellerProducts = JSON.parse(localStorage.getItem('sellerProducts')) || [];
+        categories = JSON.parse(localStorage.getItem('categories')) || ['الإلكترونيات', 'الملابس', 'المنزل والمطبخ', 'الصحة والجمال'];
+        orders = JSON.parse(localStorage.getItem('orders')) || [];
+        offers = JSON.parse(localStorage.getItem('offers')) || [];
+        drivers = JSON.parse(localStorage.getItem('drivers')) || [];
+        sellerNotifications = JSON.parse(localStorage.getItem('sellerNotifications')) || [];
+    }
+}
 
 // Add sample drivers if none exist
 if (drivers.length === 0) {
@@ -84,16 +99,10 @@ function addProduct(name, price, image, category, quantity, description, sizes, 
         sizes: Array.isArray(sizes) ? sizes : [],
         status: status,
         discountType: discountType,
-        discountValue: parseFloat(discountValue) || 0,
-        createdAt: new Date().toISOString()
+        discountValue: parseFloat(discountValue) || 0
     };
-
-    // Add to local array
     sellerProducts.push(newProduct);
-
-    // Save to localStorage
     localStorage.setItem('sellerProducts', JSON.stringify(sellerProducts));
-
     displaySellerProducts();
     populateOfferProducts(); // Update offer product options
     displayOffers(); // Update offers display
@@ -101,24 +110,9 @@ function addProduct(name, price, image, category, quantity, description, sizes, 
     alert('تم إضافة المنتج بنجاح!');
 }
 
-// Function to load products from Firebase
-async function loadProductsFromFirebase() {
-    try {
-        const querySnapshot = await getDocs(productsRef);
-        sellerProducts = [];
-        querySnapshot.forEach((doc) => {
-            sellerProducts.push({ id: doc.id, ...doc.data() });
-        });
-        return sellerProducts;
-    } catch (error) {
-        console.error('Error loading products:', error);
-        return [];
-    }
-}
-
 // Function to display seller products
 function displaySellerProducts() {
-    // Load products from localStorage
+    // Reload seller products from localStorage to get latest stock updates
     sellerProducts = JSON.parse(localStorage.getItem('sellerProducts')) || [];
 
     const sellerProductsDiv = document.getElementById('seller-products');
@@ -153,13 +147,13 @@ function displaySellerProducts() {
                 <p>الفئة: ${product.category}</p>
                 <div style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
                     <label><strong>الكمية المتاحة:</strong></label>
-                    <button onclick="adjustQuantity('${product.id}', -1)" style="padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">-</button>
+                    <button onclick="adjustQuantity(${product.id}, -1)" style="padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">-</button>
                     <span style="font-weight: bold; font-size: 1.1em;">${qty}</span>
-                    <button onclick="adjustQuantity('${product.id}', 1)" style="padding: 5px 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">+</button>
+                    <button onclick="adjustQuantity(${product.id}, 1)" style="padding: 5px 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">+</button>
                 </div>
                 <p><strong>الحالة:</strong> <span style="${statusColor}">${status}</span></p>
-                <button onclick="editProduct('${product.id}')">تعديل</button>
-                <button onclick="deleteProduct('${product.id}')">حذف المنتج</button>
+                <button onclick="editProduct(${product.id})">تعديل</button>
+                <button onclick="deleteProduct(${product.id})">حذف المنتج</button>
             `;
             sellerProductsDiv.appendChild(productCard);
         });
@@ -520,6 +514,9 @@ document.getElementById('add-product-form').addEventListener('submit', (e) => {
     const category = document.getElementById('product-category').value;
     const quantity = document.getElementById('product-quantity').value;
     const description = document.getElementById('product-description').value;
+    const specifications = document.getElementById('product-specifications').value;
+    const color = document.getElementById('product-color').value;
+    const weight = document.getElementById('product-weight').value;
     const discountType = document.getElementById('product-discount-type').value;
     const discountValue = parseFloat(document.getElementById('product-discount-value').value) || 0;
 
@@ -543,7 +540,7 @@ document.getElementById('add-product-form').addEventListener('submit', (e) => {
         return;
     }
 
-    addProduct(name, price, image, category, quantity, description, sizes, 'متاح', discountType || null, discountValue);
+    addProduct(name, price, image, category, quantity, description, sizes, 'متاح', discountType || null, discountValue, specifications, color, weight);
 
     // Clear form
     document.getElementById('add-product-form').reset();
@@ -708,27 +705,7 @@ if (logoutBtn) {
     });
 }
 
-// Initialize - Load data from localStorage
-sellerProducts = JSON.parse(localStorage.getItem('sellerProducts')) || [];
-sellerNotifications = JSON.parse(localStorage.getItem('sellerNotifications')) || [];
-categories = JSON.parse(localStorage.getItem('categories')) || ['الإلكترونيات', 'الملابس', 'المنزل والمطبخ', 'الصحة والجمال'];
-drivers = JSON.parse(localStorage.getItem('drivers')) || [
-    {
-        id: 1,
-        name: 'علي أحمد',
-        phone: '0123456789',
-        vehicle: 'سيارة صغيرة'
-    },
-    {
-        id: 2,
-        name: 'حسن محمد',
-        phone: '0987654321',
-        vehicle: 'دراجة نارية'
-    }
-];
-orders = JSON.parse(localStorage.getItem('orders')) || [];
-offers = JSON.parse(localStorage.getItem('offers')) || [];
-
+// Initialize
 displaySellerProducts();
 displayCategories();
 displayDrivers();
