@@ -1,25 +1,23 @@
 // Firebase Configuration
-// Replace with your Firebase project config
 const firebaseConfig = {
-    apiKey: "your-api-key",
-    authDomain: "your-project.firebaseapp.com",
-    projectId: "your-project-id",
-    storageBucket: "your-project.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "your-app-id"
+  apiKey: "AIzaSyCstSu-hHFohF6BrPv1WrIzxC2B1VQfOM8",
+  authDomain: "elshamaa2-d64a2.firebaseapp.com",
+  projectId: "elshamaa2-d64a2",
+  storageBucket: "elshamaa2-d64a2.firebasestorage.app",
+  messagingSenderId: "242173416516",
+  appId: "1:242173416516:web:3320ca4580ff137ca0d811",
+  measurementId: "G-MJE22XKQHX"
 };
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 
-// Initialize Firestore
+// Initialize Firebase services
+const auth = firebase.auth();
 const db = firebase.firestore();
+const storage = firebase.storage();
 
-// Products collection reference
-const productsRef = db.collection('products');
-const ordersRef = db.collection('orders');
-const usersRef = db.collection('users');
-const categoriesRef = db.collection('categories');
-const driversRef = db.collection('drivers');
-const offersRef = db.collection('offers');
-const deliveryPricesRef = db.collection('deliveryPrices');
+// Export for use in other files
+window.auth = auth;
+window.db = db;
+window.storage = storage;
