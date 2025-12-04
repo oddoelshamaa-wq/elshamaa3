@@ -95,57 +95,45 @@
             }
         });
 
-        document.getElementById('login-form-element').addEventListener('submit', async (e) => {
+        document.getElementById('login-form-element').addEventListener('submit', (e) => {
             e.preventDefault();
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
 
-            // Show loading
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = 'جاري تسجيل الدخول...';
-            submitBtn.disabled = true;
+            // Get users from localStorage
+            const users = JSON.parse(localStorage.getItem('users')) || [];
 
-            try {
-                // Authenticate user with Firebase
-                const result = await authService.loginUser(email, password);
+            // Find user
+            const user = users.find(u => u.email === email && u.password === password);
 
-                if (result.success) {
-                    // Set current user data
-                    localStorage.setItem('currentUser', JSON.stringify(result.userData));
+            if (user) {
+                // Set current user
+                localStorage.setItem('currentUser', JSON.stringify(user));
 
-                    // Redirect based on account type
-                    if (result.userData.accountType === 'buyer') {
-                        window.location.href = 'buyer.html';
-                    } else if (result.userData.accountType === 'seller') {
-                        window.location.href = 'seller.html';
-                    }
-                } else {
-                    alert(result.error);
+                // Redirect based on account type
+                if (user.accountType === 'buyer') {
+                    window.location.href = 'buyer.html';
+                } else if (user.accountType === 'seller') {
+                    window.location.href = 'seller.html';
                 }
-            } catch (error) {
-                console.error('Login error:', error);
-                alert('حدث خطأ أثناء تسجيل الدخول');
-            } finally {
-                // Reset button
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
+            } else {
+                alert('البريد الإلكتروني أو كلمة المرور غير صحيحة!');
             }
         });
 
-        // Social login buttons (placeholders)
+        // Social login buttons - disabled for localStorage version
         document.querySelector('.google-btn').addEventListener('click', () => {
-            alert('تسجيل الدخول باستخدام Google (قيد التطوير)');
+            alert('تسجيل الدخول الاجتماعي غير متاح حالياً. يرجى استخدام البريد الإلكتروني وكلمة المرور.');
         });
 
         document.querySelector('.facebook-btn').addEventListener('click', () => {
-            alert('تسجيل الدخول باستخدام Facebook (قيد التطوير)');
+            alert('تسجيل الدخول الاجتماعي غير متاح حالياً. يرجى استخدام البريد الإلكتروني وكلمة المرور.');
         });
 
         // Forgot password
         document.querySelector('.forgot-password').addEventListener('click', (e) => {
             e.preventDefault();
-            alert('إعادة تعيين كلمة المرور (قيد التطوير)');
+            alert('إعادة تعيين كلمة المرور غير متاحة حالياً. يرجى الاتصال بالدعم الفني.');
         });
     </script>
 </body>
