@@ -1,24 +1,21 @@
-// Using localStorage for data persistence - no Firebase needed for hosting
-const firebaseAvailable = false;
-
-// Seller products storage (will be loaded from Firebase)
-let sellerProducts = [];
+// Seller products storage
+let sellerProducts = JSON.parse(localStorage.getItem('sellerProducts')) || [];
 let currentEditingProductId = null;
 
 // Seller notifications
-let sellerNotifications = [];
+let sellerNotifications = JSON.parse(localStorage.getItem('sellerNotifications')) || [];
 
 // Categories management
-let categories = ['الإلكترونيات', 'الملابس', 'المنزل والمطبخ', 'الصحة والجمال'];
+let categories = JSON.parse(localStorage.getItem('categories')) || ['الإلكترونيات', 'الملابس', 'المنزل والمطبخ', 'الصحة والجمال'];
 
 // Drivers management
-let drivers = [];
+let drivers = JSON.parse(localStorage.getItem('drivers')) || [];
 
 // Orders management
-let orders = [];
+let orders = JSON.parse(localStorage.getItem('orders')) || [];
 
 // Offers management
-let offers = [];
+let offers = JSON.parse(localStorage.getItem('offers')) || [];
 
 // Add sample drivers if none exist
 if (drivers.length === 0) {
@@ -42,20 +39,14 @@ if (drivers.length === 0) {
 
 
 // Function to add product
-async function addProduct(name, price, image, category, quantity, description, sizes, status = 'متاح', discountType = null, discountValue = 0, specifications = '', color = '', weight = '') {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser || !currentUser.uid) {
-        alert('يجب تسجيل الدخول أولاً!');
-        return;
-    }
-
+function addProduct(name, price, image, category, quantity, description, sizes, status = 'متاح', discountType = null, discountValue = 0, specifications = '', color = '', weight = '') {
     const newProduct = {
-        id: Date.now() + Math.random(), // Generate unique ID
+        id: Date.now(),
         name,
         price: parseFloat(price),
         image,
         category,
-        stock: parseInt(quantity) || 0,
+        quantity: parseInt(quantity) || 0,
         description: description || '',
         specifications: specifications || '',
         color: color || '',
@@ -63,115 +54,64 @@ async function addProduct(name, price, image, category, quantity, description, s
         sizes: Array.isArray(sizes) ? sizes : [],
         status: status,
         discountType: discountType,
-        discountValue: parseFloat(discountValue) || 0,
-        sellerId: currentUser.uid,
-        createdAt: new Date().toISOString()
+        discountValue: parseFloat(discountValue) || 0
     };
-
-    try {
-        // Since Firebase is not configured, save to localStorage
-        sellerProducts.push(newProduct);
-        localStorage.setItem('sellerProducts', JSON.stringify(sellerProducts));
-
-        // Also save to user-specific storage for buyer access
-        const userProductsKey = `sellerProducts_${currentUser.uid}`;
-        const userProducts = JSON.parse(localStorage.getItem(userProductsKey)) || [];
-        userProducts.push(newProduct);
-        localStorage.setItem(userProductsKey, JSON.stringify(userProducts));
-
-        displaySellerProducts();
-        populateOfferProducts(); // Update offer product options
-        displayOffers(); // Update offers display
-        displayFeaturedProducts(); // Update featured products display
-        alert('تم إضافة المنتج بنجاح!');
-    } catch (error) {
-        console.error('Error adding product:', error);
-        alert('فشل في إضافة المنتج!');
-    }
-}
-
-// Function to load products from Firebase
-async function loadProductsFromFirebase() {
-    try {
-        const querySnapshot = await getDocs(productsRef);
-        sellerProducts = [];
-        querySnapshot.forEach((doc) => {
-            sellerProducts.push({ id: doc.id, ...doc.data() });
-        });
-        return sellerProducts;
-    } catch (error) {
-        console.error('Error loading products:', error);
-        return [];
-    }
+    sellerProducts.push(newProduct);
+    localStorage.setItem('sellerProducts', JSON.stringify(sellerProducts));
+    displaySellerProducts();
+    populateOfferProducts(); // Update offer product options
+    displayOffers(); // Update offers display
+    displayFeaturedProducts(); // Update featured products display
+    alert('تم إضافة المنتج بنجاح!');
 }
 
 // Function to display seller products
-async function displaySellerProducts() {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser || !currentUser.uid) {
-        alert('يجب تسجيل الدخول أولاً!');
-        return;
-    }
+function displaySellerProducts() {
+    // Reload seller products from localStorage to get latest stock updates
+    sellerProducts = JSON.parse(localStorage.getItem('sellerProducts')) || [];
 
-    try {
-        const q = query(productsRef, where('sellerId', '==', currentUser.uid));
-        const querySnapshot = await getDocs(q);
-        sellerProducts = [];
-        querySnapshot.forEach((doc) => {
-            sellerProducts.push({ id: doc.id, ...doc.data() });
-        });
+    const sellerProductsDiv = document.getElementById('seller-products');
+    if (sellerProductsDiv) {
+        sellerProductsDiv.innerHTML = '';
+        sellerProducts.forEach(product => {
+            const productCard = document.createElement('div');
+            productCard.className = 'product-card';
+            const qty = product.quantity || 0;
+            const status = product.status || 'متاح';
+            let statusColor = '';
+            if (status === 'غير متاح') statusColor = 'color: #dc3545;';
+            else if (status === 'مخزن مؤقتاً') statusColor = 'color: #ffc107;';
+            else statusColor = 'color: #28a745;';
 
-        const sellerProductsDiv = document.getElementById('seller-products');
-        if (sellerProductsDiv) {
-            sellerProductsDiv.innerHTML = '';
-            if (sellerProducts.length === 0) {
-                sellerProductsDiv.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">لا توجد منتجات مضافة بعد. أضف منتجك الأول!</p>';
-                return;
+            let priceDisplay = `${product.price} جنيه`;
+            if (product.discountType && product.discountValue > 0) {
+                let discountedPrice = product.price;
+                if (product.discountType === 'percentage') {
+                    discountedPrice = product.price * (1 - product.discountValue / 100);
+                } else {
+                    discountedPrice = product.price - product.discountValue;
+                }
+                discountedPrice = Math.max(0, discountedPrice);
+                priceDisplay = `<span style="text-decoration: line-through; color: #999;">${product.price} جنيه</span> <span style="color: #d32f2f; font-weight: bold;">${discountedPrice.toFixed(2)} جنيه</span>`;
             }
 
-            sellerProducts.forEach(product => {
-                const productCard = document.createElement('div');
-                productCard.className = 'product-card';
-                const qty = product.stock || 0;
-                const status = product.status || 'متاح';
-                let statusColor = '';
-                if (status === 'غير متاح') statusColor = 'color: #dc3545;';
-                else if (status === 'مخزن مؤقتاً') statusColor = 'color: #ffc107;';
-                else statusColor = 'color: #28a745;';
-
-                let priceDisplay = `${product.price} جنيه`;
-                if (product.discountType && product.discountValue > 0) {
-                    let discountedPrice = product.price;
-                    if (product.discountType === 'percentage') {
-                        discountedPrice = product.price * (1 - product.discountValue / 100);
-                    } else {
-                        discountedPrice = product.price - product.discountValue;
-                    }
-                    discountedPrice = Math.max(0, discountedPrice);
-                    priceDisplay = `<span style="text-decoration: line-through; color: #999;">${product.price} جنيه</span> <span style="color: #d32f2f; font-weight: bold;">${discountedPrice.toFixed(2)} جنيه</span>`;
-                }
-
-                productCard.innerHTML = `
-                    <img src="${product.image}" alt="${product.name}">
-                    <h3>${product.name}</h3>
-                    <p>${priceDisplay}</p>
-                    <p>الفئة: ${product.category}</p>
-                    <div style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
-                        <label><strong>الكمية المتاحة:</strong></label>
-                        <button onclick="adjustQuantity('${product.id}', -1)" style="padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">-</button>
-                        <span style="font-weight: bold; font-size: 1.1em;">${qty}</span>
-                        <button onclick="adjustQuantity('${product.id}', 1)" style="padding: 5px 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">+</button>
-                    </div>
-                    <p><strong>الحالة:</strong> <span style="${statusColor}">${status}</span></p>
-                    <button onclick="editProduct('${product.id}')">تعديل</button>
-                    <button onclick="deleteProduct('${product.id}')">حذف المنتج</button>
-                `;
-                sellerProductsDiv.appendChild(productCard);
-            });
-        }
-    } catch (error) {
-        console.error('Error loading products:', error);
-        alert('فشل في تحميل المنتجات!');
+            productCard.innerHTML = `
+                <img src="${product.image}" alt="${product.name}">
+                <h3>${product.name}</h3>
+                <p>${priceDisplay}</p>
+                <p>الفئة: ${product.category}</p>
+                <div style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+                    <label><strong>الكمية المتاحة:</strong></label>
+                    <button onclick="adjustQuantity(${product.id}, -1)" style="padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">-</button>
+                    <span style="font-weight: bold; font-size: 1.1em;">${qty}</span>
+                    <button onclick="adjustQuantity(${product.id}, 1)" style="padding: 5px 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">+</button>
+                </div>
+                <p><strong>الحالة:</strong> <span style="${statusColor}">${status}</span></p>
+                <button onclick="editProduct(${product.id})">تعديل</button>
+                <button onclick="deleteProduct(${product.id})">حذف المنتج</button>
+            `;
+            sellerProductsDiv.appendChild(productCard);
+        });
     }
 }
 
@@ -463,7 +403,7 @@ function editProduct(productId) {
         document.getElementById('edit-product-price').value = product.price;
         document.getElementById('edit-product-image').value = product.image;
         document.getElementById('edit-product-category').value = product.category;
-        document.getElementById('edit-product-quantity').value = product.stock || 0;
+        document.getElementById('edit-product-quantity').value = product.quantity || 0;
         document.getElementById('edit-product-description').value = product.description || '';
         document.getElementById('edit-product-status').value = product.status || 'متاح';
         document.getElementById('edit-product-discount-type').value = product.discountType || '';
@@ -529,6 +469,9 @@ document.getElementById('add-product-form').addEventListener('submit', (e) => {
     const category = document.getElementById('product-category').value;
     const quantity = document.getElementById('product-quantity').value;
     const description = document.getElementById('product-description').value;
+    const specifications = document.getElementById('product-specifications').value;
+    const color = document.getElementById('product-color').value;
+    const weight = document.getElementById('product-weight').value;
     const discountType = document.getElementById('product-discount-type').value;
     const discountValue = parseFloat(document.getElementById('product-discount-value').value) || 0;
 
@@ -552,7 +495,7 @@ document.getElementById('add-product-form').addEventListener('submit', (e) => {
         return;
     }
 
-    addProduct(name, price, image, category, quantity, description, sizes, 'متاح', discountType || null, discountValue);
+    addProduct(name, price, image, category, quantity, description, sizes, 'متاح', discountType || null, discountValue, specifications, color, weight);
 
     // Clear form
     document.getElementById('add-product-form').reset();
@@ -587,7 +530,7 @@ document.getElementById('edit-product-form').addEventListener('submit', (e) => {
         product.price = parseFloat(price);
         product.image = image;
         product.category = category;
-        product.stock = parseInt(quantity) || 0;
+        product.quantity = parseInt(quantity) || 0;
         product.description = description || '';
         product.sizes = sizes;
         product.discountType = discountType || null;
@@ -704,11 +647,8 @@ function calculateNetProfit() {
 
 // Check if user is logged in and is seller
 const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-if (!currentUser) {
-    window.location.href = 'login.html';
-} else if (currentUser.accountType !== 'seller') {
-    alert('يجب أن تكون مسجلاً كبائع للوصول إلى لوحة التحكم');
-    window.location.href = 'buyer.html';
+if (!currentUser || currentUser.accountType !== 'seller') {
+    window.location.href = 'index.html';
 }
 
 // Logout functionality
@@ -716,38 +656,11 @@ const logoutBtn = document.getElementById('logout');
 if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
         localStorage.removeItem('currentUser');
-        window.location.href = 'buyer.html';
+        window.location.href = 'index.html';
     });
 }
 
-// Initialize - Load data from localStorage
-if (currentUser && currentUser.uid) {
-    // Load user-specific products
-    const userProductsKey = `sellerProducts_${currentUser.uid}`;
-    sellerProducts = JSON.parse(localStorage.getItem(userProductsKey)) || [];
-} else {
-    sellerProducts = JSON.parse(localStorage.getItem('sellerProducts')) || [];
-}
-
-sellerNotifications = JSON.parse(localStorage.getItem('sellerNotifications')) || [];
-categories = JSON.parse(localStorage.getItem('categories')) || ['الإلكترونيات', 'الملابس', 'المنزل والمطبخ', 'الصحة والجمال'];
-drivers = JSON.parse(localStorage.getItem('drivers')) || [
-    {
-        id: 1,
-        name: 'علي أحمد',
-        phone: '0123456789',
-        vehicle: 'سيارة صغيرة'
-    },
-    {
-        id: 2,
-        name: 'حسن محمد',
-        phone: '0987654321',
-        vehicle: 'دراجة نارية'
-    }
-];
-orders = JSON.parse(localStorage.getItem('orders')) || [];
-offers = JSON.parse(localStorage.getItem('offers')) || [];
-
+// Initialize
 displaySellerProducts();
 displayCategories();
 displayDrivers();
@@ -1043,7 +956,7 @@ function displayFeaturedProducts() {
                 </div>
 
                 <p><strong>أيام الخصم:</strong> ${selectedDays}</p>
-                <p><strong>الكمية المتاحة:</strong> ${product.stock} قطعة</p>
+                <p><strong>الكمية المتاحة:</strong> ${product.quantity} قطعة</p>
 
                 <div style="display: flex; gap: 10px; margin-top: 15px;">
                     <button onclick="editProduct(${product.id})" style="flex: 1;">تعديل المنتج</button>

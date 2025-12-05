@@ -58,43 +58,6 @@
     </footer>
 
     <script>
-        // Load users from localStorage or initialize with embedded users
-        let users = JSON.parse(localStorage.getItem('users')) || [
-            {
-                "id": 1,
-                "username": "admin",
-                "email": "admin@example.com",
-                "password": "admin123",
-                "accountType": "seller",
-                "fullName": "مدير النظام",
-                "phone": "01234567890",
-                "address": "القاهرة، مصر",
-                "createdAt": "2024-01-01T00:00:00.000Z"
-            },
-            {
-                "id": 2,
-                "username": "buyer1",
-                "email": "buyer@example.com",
-                "password": "buyer123",
-                "accountType": "buyer",
-                "fullName": "مشتري تجريبي",
-                "phone": "01987654321",
-                "address": "الإسكندرية، مصر",
-                "createdAt": "2024-01-02T00:00:00.000Z"
-            },
-            {
-                "id": 3,
-                "username": "seller1",
-                "email": "seller@example.com",
-                "password": "seller123",
-                "accountType": "seller",
-                "fullName": "بائع تجريبي",
-                "phone": "01555555555",
-                "address": "الجيزة، مصر",
-                "createdAt": "2024-01-03T00:00:00.000Z"
-            }
-        ];
-
         // Form validation functions
         function validateEmail(email) {
             const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -163,40 +126,21 @@
             const phone = document.getElementById('register-phone').value;
             const accountType = document.getElementById('register-account-type').value;
 
-            // Check if email already exists
-            const existingUser = users.find(u => u.email === email);
+            // Check if user already exists
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const existingUser = users.find(user => user.email === email);
             if (existingUser) {
                 alert('البريد الإلكتروني موجود بالفعل!');
                 return;
             }
 
-            // Create new user
-            const newUser = {
-                id: Date.now(),
-                username: email.split('@')[0],
-                email,
-                password,
-                accountType,
-                fullName: name,
-                phone,
-                address,
-                createdAt: new Date().toISOString()
-            };
-
-            // Add to users array
+            // Save new user
+            const newUser = { name, email, password, address, phone, accountType };
             users.push(newUser);
             localStorage.setItem('users', JSON.stringify(users));
 
-            // Set current user in localStorage
-            const currentUser = {
-                uid: newUser.id.toString(),
-                email: newUser.email,
-                fullName: newUser.fullName,
-                accountType: newUser.accountType,
-                phone: newUser.phone,
-                address: newUser.address
-            };
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            // Set current user
+            localStorage.setItem('currentUser', JSON.stringify(newUser));
 
             // Redirect based on account type
             if (accountType === 'buyer') {

@@ -100,40 +100,38 @@
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
 
-            // Get users from localStorage
+            // Authenticate user
             const users = JSON.parse(localStorage.getItem('users')) || [];
-
-            // Find user
             const user = users.find(u => u.email === email && u.password === password);
-
-            if (user) {
-                // Set current user
-                localStorage.setItem('currentUser', JSON.stringify(user));
-
-                // Redirect based on account type
-                if (user.accountType === 'buyer') {
-                    window.location.href = 'buyer.html';
-                } else if (user.accountType === 'seller') {
-                    window.location.href = 'seller.html';
-                }
-            } else {
+            if (!user) {
                 alert('البريد الإلكتروني أو كلمة المرور غير صحيحة!');
+                return;
+            }
+
+            // Set current user
+            localStorage.setItem('currentUser', JSON.stringify(user));
+
+            // Redirect based on account type
+            if (user.accountType === 'buyer') {
+                window.location.href = 'buyer.html';
+            } else if (user.accountType === 'seller') {
+                window.location.href = 'seller.html';
             }
         });
 
-        // Social login buttons - disabled for localStorage version
+        // Social login buttons (placeholders)
         document.querySelector('.google-btn').addEventListener('click', () => {
-            alert('تسجيل الدخول الاجتماعي غير متاح حالياً. يرجى استخدام البريد الإلكتروني وكلمة المرور.');
+            alert('تسجيل الدخول باستخدام Google (قيد التطوير)');
         });
 
         document.querySelector('.facebook-btn').addEventListener('click', () => {
-            alert('تسجيل الدخول الاجتماعي غير متاح حالياً. يرجى استخدام البريد الإلكتروني وكلمة المرور.');
+            alert('تسجيل الدخول باستخدام Facebook (قيد التطوير)');
         });
 
         // Forgot password
         document.querySelector('.forgot-password').addEventListener('click', (e) => {
             e.preventDefault();
-            alert('إعادة تعيين كلمة المرور غير متاحة حالياً. يرجى الاتصال بالدعم الفني.');
+            alert('إعادة تعيين كلمة المرور (قيد التطوير)');
         });
     </script>
 </body>
